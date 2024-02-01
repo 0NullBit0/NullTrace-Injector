@@ -1,27 +1,24 @@
-# NullTrace-Android-Inject
-Inject libraries and control processes remotely on android multi arch emulator supported
+# NullTrace-Android-Injector
+Inject libraries shared libraries on any process
 
-**Features:**
-- Read and write process memory
-- Remotely call functions in target process
-- inject libraries
-- hooking (soon)
 
-Multi arch support + tested on emulator 
+Building:
+have ndk-build as env variable and do
+```
+ndk-build
+```
 
-Setup:
+Running: 
+```
+su
+chmod 777 NullInject
+./NullInject -p (packagename) -lib (library path)
 
-[Change ANDROID_NDK path](./NullInject/CMakeLists.txt)
 
-[Change CMAKE_TOOLCHAIN_FILE path](./NullInject/CMakeLists.txt)
+-p flag : provide package name like com.nullbit.pocinject
+-lib flag : provide full library path like /data/local/tmp/libhacklib.so
+```
 
-[Change ABI TO YOUR DESIRED](./NullInject/CMakeLists.txt)
-
-[Change Main file](./NullInject/app/src/main.cpp)
-
-On Windows run build.bat on other oses create a similar script and run
-
-Executable will be located at outputs or you can use NullTrace seperately as a library for different projects
 
 # Emulator inject showcase:
 # [Video]https://www.youtube.com/watch?v=1tmVWJ4fSF0
