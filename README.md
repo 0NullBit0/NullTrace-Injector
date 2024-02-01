@@ -1,5 +1,5 @@
 # NullTrace-Android-Inject
-Inject and control processes remotely on android multi arch emulator supported
+Inject libraries and control processes remotely on android multi arch emulator supported
 
 **Features:**
 - Read and write process memory
