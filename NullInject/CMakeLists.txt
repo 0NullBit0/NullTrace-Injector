@@ -7,8 +7,8 @@ set(CMAKE_SYSTEM_VERSION 28) #
 set(ANDROID_PLATFORM 28) #
 set(ANDROID_ABI ${ABI})
 ############################## CHANGE TO YOUR PATH
-set(ANDROID_NDK )#C:/Users/ceyla/AppData/Local/Android/Sdk/ndk/25.2.9519653) # CHANGE TO YOUR NDK PATH
-set(CMAKE_TOOLCHAIN_FILE )#AppData/Local/Android/Sdk/ndk/25.2.9519653/build/cmake/android.toolchain.cmake) # CHANGE TO YOUR PATH
+set(ANDROID_NDK )#/ndk/25.2.9519653) # CHANGE TO YOUR NDK PATH
+set(CMAKE_TOOLCHAIN_FILE )#ndk/25.2.9519653/build/cmake/android.toolchain.cmake) # CHANGE TO YOUR PATH
 ############################## CHANGE TO YOUR PATH
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/outputs/${ABI})
 set(CMAKE_CXX_STANDARD 17)
