@@ -16,5 +16,5 @@ On Windows run build.bat on other oses create a similar script and run
 
 Executable will be located at outputs or you can use NullTrace seperately as a library for different projects
 
-Emulator inject showcase:
+# Emulator inject showcase:
 # [Video]https://www.youtube.com/watch?v=wfjUcNLGZdw
