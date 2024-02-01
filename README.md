@@ -13,7 +13,8 @@ Setup:
 [Change ANDROID_NDK path](./NullInject/CMakeLists.txt)
 [Change CMAKE_TOOLCHAIN_FILE path](./NullInject/CMakeLists.txt)
 On Windows run build.bat on other oses create a similar script and run
-Executable will be located at outputs or you can use NullTrace as a library for different projects
+
+Executable will be located at outputs or you can use NullTrace seperately as a library for different projects
 
 Emulator inject showcase:
-[Video](https://www.youtube.com/watch?v=1tmVWJ4fSF0)
+# [Video]https://www.youtube.com/watch?v=wfjUcNLGZdw
