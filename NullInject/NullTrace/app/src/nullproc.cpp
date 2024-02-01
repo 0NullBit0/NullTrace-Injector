@@ -171,7 +171,7 @@ bool NullProcess::Process::injectLibrary(std::string path) {
         return false;
     }
     std::cout << "[NullTrace] libRS base: " << std::hex << librs_base << "\n";
-    void* handle = this->call<void*>(librs_base, this->libdl.remote_dlopen, pathAddr, RTLD_NOW | RTLD_GLOBAL);
+    void* handle = this->callR<void*>(librs_base, this->libdl.remote_dlopen, pathAddr, RTLD_NOW | RTLD_GLOBAL);
     if(!handle) {
         std::cerr << "[NullTrace] failed injection " << std::hex << handle << "\n";
         uintptr_t errnoMsg = this->call<uintptr_t>(this->libdl.remote_dlerror);
