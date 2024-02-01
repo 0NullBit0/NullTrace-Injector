@@ -119,7 +119,7 @@ namespace NullProcess {
         }
 
         template <typename RetT, typename... Args>
-        RetT call(uintptr_t retAddr, uintptr_t address, Args... args) {
+        RetT callR(uintptr_t retAddr, uintptr_t address, Args... args) {
             std::vector<uintptr_t> argVec = {NullUtils::handleArg(args)...};
 
 
