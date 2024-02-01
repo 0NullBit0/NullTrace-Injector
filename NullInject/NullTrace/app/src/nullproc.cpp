@@ -128,7 +128,7 @@ bool NullProcess::Process::injectLibrary(std::string path) {
     << this->libc.remote_free << " LIBDL Dlopen Address: " << std::hex << this->libdl.remote_dlopen << "\n";
     size_t pathSize = path.size();
 
-    void* pathAddr = this->call<void*>(this->libc.remote_malloc, 0, pathSize + 1, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+    void* pathAddr = this->call<void*>(this->libc.remote_malloc, pathSize + 1);
     if(pathAddr == nullptr) {
         std::cerr << "[NullTrace] Failed allocating memory on target process aborting\n";
         return false;
