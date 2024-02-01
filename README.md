@@ -16,6 +16,7 @@ Setup:
 [Change CMAKE_TOOLCHAIN_FILE path](./NullInject/CMakeLists.txt)
 
 [Change ABI TO YOUR DESIRED](./NullInject/CMakeLists.txt)
+
 On Windows run build.bat on other oses create a similar script and run
 
 Executable will be located at outputs or you can use NullTrace seperately as a library for different projects
