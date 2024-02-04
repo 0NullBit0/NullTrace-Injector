@@ -1,7 +1,7 @@
 # NullTrace-Android-Injector
-Inject libraries shared libraries on any process
+Inject shared libraries on any process in android
 
-SUCCESSFULL EMULATOR INJECTIONS tested on bluestacks android 9 and 11
+SUCCESSFULL EMULATOR INJECTIONS tested on bluestacks android 9 and 11 + nativebridge injection supported now in the new update (Arm lib injection on emulator)!
 
 Building:
 have ndk-build as env variable be in root dir and do
