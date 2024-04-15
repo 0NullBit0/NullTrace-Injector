@@ -3,8 +3,7 @@
 
 Successful shared library injections tested on real devices and emulators (handles nativebridge for arm lib injections on emulator)
 
-#Building:
-
+# Building:
 1: Make a new environment variable called NDK and link the root NDK directory to it
 Or manually adjust the NDK and CMake_Toolchain paths here: 
 [Link NDK](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L<7>)
@@ -19,7 +18,7 @@ On Unix: run the build.sh file by:
 
 
 
-Running: 
+# Running: 
 ```
 su
 chmod 777 NullInject
