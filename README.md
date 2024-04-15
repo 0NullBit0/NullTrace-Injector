@@ -4,10 +4,12 @@
 Successful shared library injections tested on real devices and emulators (handles nativebridge for arm lib injections on emulator)
 
 # Building:
-1: Make a new environment variable called NDK and link the root NDK directory to it
+1: Get thr Android-NDK and make a new environment variable called NDK and link the root NDK directory to it, 
 Or manually adjust the NDK and CMake_Toolchain paths here: 
 [Link NDK](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L7)
 [Link CMAKE_TC](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L8)
+
+Install CMake and make sure the environment variable for CMake is set
 
 2: On Windows: run the build.bat file in powershell by: ```.\build.bat```
 
