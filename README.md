@@ -14,7 +14,7 @@ Install CMake and make sure the PATH environment variable for CMake is set https
 
 2: On Windows: run the build.bat file in powershell by: ```.\build.bat```
 
-On Unix: chmod +x build.sh and run the build.sh file by:
+On Unix: ```chmod +x``` build.sh and run the build.sh file by:
 ```./build.sh``` or ```bash build.sh``` or ```sh build.sh```
 
 3: The executables will be inside ```build_out/{arch}/NullTrace-Injector```
