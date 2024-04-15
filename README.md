@@ -6,8 +6,8 @@ Successful shared library injections tested on real devices and emulators (handl
 # Building:
 1: Make a new environment variable called NDK and link the root NDK directory to it
 Or manually adjust the NDK and CMake_Toolchain paths here: 
-[Link NDK](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L<7>)
-[Link CMAKE_TC](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L<8>)
+[Link NDK](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L7)
+[Link CMAKE_TC](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L8)
 
 2: On Windows: run the build.bat file in powershell by: ```.\build.bat```
 
