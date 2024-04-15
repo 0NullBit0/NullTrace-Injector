@@ -21,7 +21,7 @@ On Unix: run the build.sh file by:
 # Running: 
 ```
 su
-chmod 777 NullInject
+chmod 777 NullTrace-Injector
 chmod 777 (libraryname).so
 ./NullTrace-Injector -p (packagename) -lib (library path)
 ```
