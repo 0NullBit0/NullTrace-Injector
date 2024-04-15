@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REM build script for unix by nullbit
+# build script for Unix by nullbit
 
 ABIS=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
 BUILD_DIR="tmp_wbuild"
@@ -11,7 +11,7 @@ for ABI in "${ABIS[@]}"; do
         rm -rf "$BUILD_DIR"
     fi
     mkdir "$BUILD_DIR"
-    cmake -S . -B "BUILD_DIR" -G "Ninja" -DANDROID_ABI="$ABI"
+    cmake -S . -B "$BUILD_DIR" -G "Ninja" -DANDROID_ABI="$ABI"
     cmake --build "$BUILD_DIR"
 done
 
