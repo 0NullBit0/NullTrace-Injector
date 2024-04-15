@@ -45,3 +45,7 @@ CTestTestfile.cmake
 _deps
 
 adb_push.bat
+LICENSE
+README.md
+nulltrace-demo.png
+.gitignore
