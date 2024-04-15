@@ -81,55 +81,14 @@ uintptr_t NullTrace::ptraceRemoteCall(pid_t pid, uintptr_t addr, uintptr_t* argv
 
     std::memcpy(&oldRegs, &regs, sizeof(regs));
 #if defined(__arm__)
-        for(int i = 0; (i < argc) && (i < 4); i++) {
-            regs.uregs[i] = argv[i];
-        }
+    for(int i = 0; (i < argc) && (i < 4); i++) {
+        regs.uregs[i] = argv[i];
+    }
 
-        if(argc > 4) {
-            regs.ARM_sp -= sizeof(uintptr_t) * (argc - 4);
-            uintptr_t stack = regs.ARM_sp;
-            for(int i = 4; i < argc; i++) {
-                uintptr_t arg = argv[i];
-                if(!ptraceWrite(pid, stack, (uint8_t*)&arg, sizeof(uintptr_t))) {
-
-                    return 0;
-                }
-                stack += sizeof(uintptr_t);
-            }
-        }
-
-        regs.ARM_pc = addr;
-        // handeling arm/thumb mode
-        if(regs.ARM_pc & 1) {
-            regs.ARM_pc &= (~1u);
-            regs.ARM_cpsr |= CPSRTMASK;
-        } else {
-            regs.ARM_cpsr &= ~CPSRTMASK;
-        }
-        regs.ARM_lr = retAddr; //lr register
-#elif defined(__aarch64__)
-        for(int i = 0; (i < argc) && (i < 8); i++) {
-            regs.regs[i] = argv[i];
-        }
-        if(argc > 8) {
-            regs.sp -= sizeof(uintptr_t) * (argc - 8);
-            uintptr_t stack = regs.sp;
-            for(int i = 8; i < argc; i++) {
-                uintptr_t arg = argv[i];
-                if(!ptraceWrite(pid, stack, (uint8_t*)&arg, sizeof(uintptr_t))) {
-
-                    return 0;
-                }
-                stack += sizeof(uintptr_t);
-            }
-        }
-
-        regs.pc = addr;
-        regs.regs[30] = retAddr; //lr register
-#elif defined(__i386__)
-        regs.esp -=  sizeof(uintptr_t) * argc;
-        uintptr_t stack = regs.esp;
-        for(int i = 0; i < argc; i++) {
+    if(argc > 4) {
+        regs.ARM_sp -= sizeof(uintptr_t) * (argc - 4);
+        uintptr_t stack = regs.ARM_sp;
+        for(int i = 4; i < argc; i++) {
             uintptr_t arg = argv[i];
             if(!ptraceWrite(pid, stack, (uint8_t*)&arg, sizeof(uintptr_t))) {
 
@@ -137,61 +96,102 @@ uintptr_t NullTrace::ptraceRemoteCall(pid_t pid, uintptr_t addr, uintptr_t* argv
             }
             stack += sizeof(uintptr_t);
         }
+    }
 
-        uintptr_t lr = retAddr;
-        regs.esp -= sizeof(uintptr_t);
-        if(!ptraceWrite(pid, regs.esp, (uint8_t*)&lr, sizeof(uintptr_t))) {
-
-            return 0;
-        }
-        regs.eip = addr;
-#elif defined(__x86_64__) // credits: @reveny on Github
-        //Alignment
-        uintptr_t space = sizeof(uintptr_t);
-        if(argc > 6) {
-            space += sizeof(uintptr_t) * (argc - 6);
-        }
-        while( ((regs.rsp - space - 8) & 0xF) != 0 ) {
-            regs.rsp--;
-        }
-        for(int i = 0; (i < argc) && (i < 6); i++) {
+    regs.ARM_pc = addr;
+    // handeling arm/thumb mode
+    if(regs.ARM_pc & 1) {
+        regs.ARM_pc &= (~1u);
+        regs.ARM_cpsr |= CPSRTMASK;
+    } else {
+        regs.ARM_cpsr &= ~CPSRTMASK;
+    }
+    regs.ARM_lr = retAddr; //lr register
+#elif defined(__aarch64__)
+    for(int i = 0; (i < argc) && (i < 8); i++) {
+        regs.regs[i] = argv[i];
+    }
+    if(argc > 8) {
+        regs.sp -= sizeof(uintptr_t) * (argc - 8);
+        uintptr_t stack = regs.sp;
+        for(int i = 8; i < argc; i++) {
             uintptr_t arg = argv[i];
-            switch (i) {
-                case 0: regs.rdi = arg; break;
-                case 1: regs.rsi = arg; break;
-                case 2: regs.rdx = arg; break;
-                case 3: regs.rcx = arg; break;
-                case 4: regs.r8 = arg; break;
-                case 5: regs.r9 = arg; break;
+            if(!ptraceWrite(pid, stack, (uint8_t*)&arg, sizeof(uintptr_t))) {
+
+                return 0;
             }
+            stack += sizeof(uintptr_t);
         }
+    }
 
-        if(argc > 6) {
-            regs.rsp -= sizeof(uintptr_t) * (argc - 6);
-            uintptr_t stack = regs.rsp;
-            for(int i = 6; i < argc; i++) {
-                uintptr_t arg = argv[i];
-                if(!ptraceWrite(pid, stack, (uint8_t*)&arg, sizeof(uintptr_t))) {
+    regs.pc = addr;
+    regs.regs[30] = retAddr; //lr register
+#elif defined(__i386__)
+    regs.esp -=  sizeof(uintptr_t) * argc;
+    uintptr_t stack = regs.esp;
+    for(int i = 0; i < argc; i++) {
+        uintptr_t arg = argv[i];
+        if(!ptraceWrite(pid, stack, (uint8_t*)&arg, sizeof(uintptr_t))) {
 
-                    return 0;
-                }
-                stack += sizeof(uintptr_t);
-            }
-        }
-
-        uintptr_t lr = retAddr;
-        regs.rsp -= sizeof(uintptr_t);
-        if(!ptraceWrite(pid, regs.rsp, (uint8_t*)&lr, sizeof(uintptr_t))) {
-            std::cerr << "[NullTrace] failed remote calling couldnt write\n";
             return 0;
         }
+        stack += sizeof(uintptr_t);
+    }
+
+    uintptr_t lr = retAddr;
+    regs.esp -= sizeof(uintptr_t);
+    if(!ptraceWrite(pid, regs.esp, (uint8_t*)&lr, sizeof(uintptr_t))) {
+
+        return 0;
+    }
+    regs.eip = addr;
+#elif defined(__x86_64__) // credits: @reveny on Github
+    //Alignment
+    uintptr_t space = sizeof(uintptr_t);
+    if(argc > 6) {
+        space += sizeof(uintptr_t) * (argc - 6);
+    }
+    while( ((regs.rsp - space - 8) & 0xF) != 0 ) {
+        regs.rsp--;
+    }
+    for(int i = 0; (i < argc) && (i < 6); i++) {
+        uintptr_t arg = argv[i];
+        switch (i) {
+            case 0: regs.rdi = arg; break;
+            case 1: regs.rsi = arg; break;
+            case 2: regs.rdx = arg; break;
+            case 3: regs.rcx = arg; break;
+            case 4: regs.r8 = arg; break;
+            case 5: regs.r9 = arg; break;
+        }
+    }
+
+    if(argc > 6) {
+        regs.rsp -= sizeof(uintptr_t) * (argc - 6);
+        uintptr_t stack = regs.rsp;
+        for(int i = 6; i < argc; i++) {
+            uintptr_t arg = argv[i];
+            if(!ptraceWrite(pid, stack, (uint8_t*)&arg, sizeof(uintptr_t))) {
+
+                return 0;
+            }
+            stack += sizeof(uintptr_t);
+        }
+    }
+
+    uintptr_t lr = retAddr;
+    regs.rsp -= sizeof(uintptr_t);
+    if(!ptraceWrite(pid, regs.rsp, (uint8_t*)&lr, sizeof(uintptr_t))) {
+        std::cerr << "[NullTrace] failed remote calling couldnt write\n";
+        return 0;
+    }
 
 
-        regs.rip = addr;
-        regs.rax = 0;
-        regs.orig_rax = 0;
-    #else
-        #error Unsupported Device
+    regs.rip = addr;
+    regs.rax = 0;
+    regs.orig_rax = 0;
+#else
+#error Unsupported Device
 #endif
 
     if(!NullTrace::ptraceSetRegs(pid, regs)) {
@@ -229,51 +229,51 @@ uintptr_t NullTrace::ptraceRemoteCall(pid_t pid, uintptr_t addr, uintptr_t* argv
     }
 
 #if defined(__arm__)
-        return regs.ARM_r0;
+    return regs.ARM_r0;
 #elif defined(__aarch64__)
-        return regs.regs[0];
+    return regs.regs[0];
 #elif defined(__i386__)
-        return regs.eax;
+    return regs.eax;
 #elif defined(__x86_64__)
-        return regs.rax;
+    return regs.rax;
 #endif
 }
 
 
 bool NullTrace::ptraceGetRegs(pid_t pid, regs_s &regs) {
 #if defined(__LP64__)
-        struct iovec iov{};
-        iov.iov_base = &regs;
-        iov.iov_len = sizeof(regs);
-        if(ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, &iov) == -1) {
+    struct iovec iov{};
+    iov.iov_base = &regs;
+    iov.iov_len = sizeof(regs);
+    if(ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, &iov) == -1) {
 
-            return false;
-        }
-        return true;
+        return false;
+    }
+    return true;
 #else
-        if(ptrace(PTRACE_GETREGS, pid, nullptr, &regs) == -1) {
+    if(ptrace(PTRACE_GETREGS, pid, nullptr, &regs) == -1) {
 
-            return false;
-        }
-        return true;
+        return false;
+    }
+    return true;
 #endif
 }
 
 bool NullTrace::ptraceSetRegs(pid_t pid, regs_s &regs) {
 #if defined(__LP64__)
-        struct iovec iov{};
-        iov.iov_base = &regs;
-        iov.iov_len = sizeof(regs);
-        if (ptrace(PTRACE_SETREGSET, pid, NT_PRSTATUS, &iov) == -1) {
+    struct iovec iov{};
+    iov.iov_base = &regs;
+    iov.iov_len = sizeof(regs);
+    if (ptrace(PTRACE_SETREGSET, pid, NT_PRSTATUS, &iov) == -1) {
 
-            return false;
-        }
-        return true;
+        return false;
+    }
+    return true;
 #else
-        if(ptrace(PTRACE_SETREGS, pid, nullptr, &regs) == -1) {
+    if(ptrace(PTRACE_SETREGS, pid, nullptr, &regs) == -1) {
 
-            return false;
-        }
-        return true;
+        return false;
+    }
+    return true;
 #endif
 }

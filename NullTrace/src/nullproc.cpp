@@ -342,83 +342,81 @@ void NullProcess::Process::locateSymbols() {
     bool libnativebridgeinit = false;
 
 #if defined(__arm__) || defined(__aarch64__)
-        for(const NullProcess::Map &map : this->maps) {
-            if(NullUtils::endsWith(map.pathName, "libdl.so") && !libdlinit) {
-                this->libdl.remote_dlopen = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlopen");
-                this->libdl.remote_dlerror = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlerror");
-                this->libdl.remote_dlsym = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlsym");
-                libdlinit = true;
-            }
-            if(NullUtils::endsWith(map.pathName, "libc.so") && !libcinit) {
-                this->libc.remote_malloc = map.start + NullElf::getAddrSym(map.pathName.c_str(), "malloc");
-                this->libc.remote_free = map.start + NullElf::getAddrSym(map.pathName.c_str(), "free");
-                this->libc.remote_mmap = map.start + NullElf::getAddrSym(map.pathName.c_str(), "mmap");
-                libcinit = true;
-            }
+    for(const NullProcess::Map &map : this->maps) {
+        if(NullUtils::endsWith(map.pathName, "libdl.so") && !libdlinit) {
+            this->libdl.remote_dlopen = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlopen");
+            this->libdl.remote_dlerror = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlerror");
+            this->libdl.remote_dlsym = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlsym");
+            libdlinit = true;
         }
+        if(NullUtils::endsWith(map.pathName, "libc.so") && !libcinit) {
+            this->libc.remote_malloc = map.start + NullElf::getAddrSym(map.pathName.c_str(), "malloc");
+            this->libc.remote_free = map.start + NullElf::getAddrSym(map.pathName.c_str(), "free");
+            this->libc.remote_mmap = map.start + NullElf::getAddrSym(map.pathName.c_str(), "mmap");
+            libcinit = true;
+        }
+    }
 #elif defined(__i386__) || defined(__x86_64__)
-
-        for(const NullProcess::Map &map : this->maps) {
-            if(map.pathName.find("/arm/") == std::string::npos
-            && map.pathName.find("/arm64/") == std::string::npos
-            && map.pathName.find("/nb/") == std::string::npos
-            && NullUtils::endsWith(map.pathName, "libdl.so")
-            && !libdlinit) {
-                this->libdl.remote_dlopen = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlopen");
-                this->libdl.remote_dlerror = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlerror");
-                this->libdl.remote_dlsym = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlsym");
-                libdlinit = true;
-            }
-
-            if(map.pathName.find("/arm/") == std::string::npos
-               && map.pathName.find("/arm64/") == std::string::npos
-               && map.pathName.find("/nb/") == std::string::npos
-               && NullUtils::endsWith(map.pathName, "libc.so")
-               && !libcinit) {
-                this->libc.remote_malloc = map.start + NullElf::getAddrSym(map.pathName.c_str(), "malloc");
-                this->libc.remote_free = map.start + NullElf::getAddrSym(map.pathName.c_str(), "free");
-                this->libc.remote_mmap = map.start + NullElf::getAddrSym(map.pathName.c_str(), "mmap");
-                libcinit = true;
-            }
-
-            if(map.pathName.find("/arm/") == std::string::npos
-               && map.pathName.find("/arm64/") == std::string::npos
-               && map.pathName.find("/nb/") == std::string::npos
-               && NullUtils::endsWith(map.pathName, "libnativebridge.so")
-               && !libnativebridgeinit) {
-                if(NullUtils::getApiLevel() >= 26)
-                    this->libnativebridge.remote_loadLibraryExt = map.start + NullElf::getAddrSym(map.pathName.c_str(), "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE");
-                else
-                    this->libnativebridge.remote_loadLibrary    = map.start + NullElf::getAddrSym(map.pathName.c_str(),"_ZN7android23NativeBridgeLoadLibraryEPKci");
-                this->libnativebridge.remote_getError = map.start + NullElf::getAddrSym(map.pathName.c_str(), "_ZN7android20NativeBridgeGetErrorEv");
-                this->libnativebridge.remote_getTrampoline = map.start + NullElf::getAddrSym(map.pathName.c_str(), "_ZN7android25NativeBridgeGetTrampolineEPvPKcS2_j");
-                this->nbInfo.nativeBridgeActive = true;
-                this->nbInfo.usesCallbacksPtr   = false;
-                libnativebridgeinit = true;
-            }
+    for(const NullProcess::Map &map : this->maps) {
+        if(map.pathName.find("/arm/") == std::string::npos
+        && map.pathName.find("/arm64/") == std::string::npos
+        && map.pathName.find("/nb/") == std::string::npos
+        && NullUtils::endsWith(map.pathName, "libdl.so")
+        && !libdlinit) {
+            this->libdl.remote_dlopen = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlopen");
+            this->libdl.remote_dlerror = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlerror");
+            this->libdl.remote_dlsym = map.start + NullElf::getAddrSym(map.pathName.c_str(), "dlsym");
+            libdlinit = true;
         }
 
-        if(!libnativebridgeinit) {
-            NullProcess::Map nbMap = this->findMap("libhoudini.so");
-            if(nbMap.pathName.empty()) {
-                auto nbProp = std::array<char, PROP_VALUE_MAX>();
-                __system_property_get("ro.dalvik.vm.native.bridge", nbProp.data());
-                std::string nbStr = {nbProp.data()};
-
-                nbMap = this->findMap(nbStr);
-            }
-            if(nbMap.pathName.empty()) {
-                this->nbInfo.nativeBridgeActive = false;
-                this->nbInfo.usesCallbacksPtr   = false;
-            }
-            else {
-                uintptr_t  nbCallbacksAddr = (NullElf::getAddrSym(nbMap.pathName.c_str(), "NativeBridgeItf") + nbMap.start);
-                this->nbCallbacks = this->readProcessMemory<NullUtils::NativeBridgeCallbacks>(nbCallbacksAddr);
-                this->nbInfo.nativeBridgeActive = true;
-                this->nbInfo.usesCallbacksPtr   = true;
-            }
+        if(map.pathName.find("/arm/") == std::string::npos
+           && map.pathName.find("/arm64/") == std::string::npos
+           && map.pathName.find("/nb/") == std::string::npos
+           && NullUtils::endsWith(map.pathName, "libc.so")
+           && !libcinit) {
+            this->libc.remote_malloc = map.start + NullElf::getAddrSym(map.pathName.c_str(), "malloc");
+            this->libc.remote_free = map.start + NullElf::getAddrSym(map.pathName.c_str(), "free");
+            this->libc.remote_mmap = map.start + NullElf::getAddrSym(map.pathName.c_str(), "mmap");
+            libcinit = true;
         }
 
+        if(map.pathName.find("/arm/") == std::string::npos
+           && map.pathName.find("/arm64/") == std::string::npos
+           && map.pathName.find("/nb/") == std::string::npos
+           && NullUtils::endsWith(map.pathName, "libnativebridge.so")
+           && !libnativebridgeinit) {
+            if(NullUtils::getApiLevel() >= 26)
+                this->libnativebridge.remote_loadLibraryExt = map.start + NullElf::getAddrSym(map.pathName.c_str(), "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE");
+            else
+                this->libnativebridge.remote_loadLibrary    = map.start + NullElf::getAddrSym(map.pathName.c_str(),"_ZN7android23NativeBridgeLoadLibraryEPKci");
+            this->libnativebridge.remote_getError = map.start + NullElf::getAddrSym(map.pathName.c_str(), "_ZN7android20NativeBridgeGetErrorEv");
+            this->libnativebridge.remote_getTrampoline = map.start + NullElf::getAddrSym(map.pathName.c_str(), "_ZN7android25NativeBridgeGetTrampolineEPvPKcS2_j");
+            this->nbInfo.nativeBridgeActive = true;
+            this->nbInfo.usesCallbacksPtr   = false;
+            libnativebridgeinit = true;
+        }
+    }
+
+    if(!libnativebridgeinit) {
+        NullProcess::Map nbMap = this->findMap("libhoudini.so");
+        if(nbMap.pathName.empty()) {
+            auto nbProp = std::array<char, PROP_VALUE_MAX>();
+            __system_property_get("ro.dalvik.vm.native.bridge", nbProp.data());
+            std::string nbStr = {nbProp.data()};
+
+            nbMap = this->findMap(nbStr);
+        }
+        if(nbMap.pathName.empty()) {
+            this->nbInfo.nativeBridgeActive = false;
+            this->nbInfo.usesCallbacksPtr   = false;
+        }
+        else {
+            uintptr_t  nbCallbacksAddr = (NullElf::getAddrSym(nbMap.pathName.c_str(), "NativeBridgeItf") + nbMap.start);
+            this->nbCallbacks = this->readProcessMemory<NullUtils::NativeBridgeCallbacks>(nbCallbacksAddr);
+            this->nbInfo.nativeBridgeActive = true;
+            this->nbInfo.usesCallbacksPtr   = true;
+        }
+    }
 #else
 #error Unsupported Device
 #endif
