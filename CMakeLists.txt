@@ -7,7 +7,7 @@ set(ANDROID_PLATFORM 29)
 set(ANDROID_NDK $ENV{NDK})
 set(CMAKE_TOOLCHAIN_FILE $ENV{NDK}/build/cmake/android.toolchain.cmake)
 
-project("Test_Project" VERSION 1.0)
+project("NullTrace-Android-Injector" VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "-fno-rtti -O3")
