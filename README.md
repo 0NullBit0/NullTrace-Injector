@@ -10,10 +10,8 @@ Or manually adjust the NDK and CMake_Toolchain paths here:
 [Link NDK](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L<7>)
 [Link CMAKE_TC](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L<8>)
 
-2: On Windows: run the build.bat file in powershell by: 
-```
-.\build.bat
-```
+2: On Windows: run the build.bat file in powershell by: ```.\build.bat```
+
 On Unix: run the build.sh file by:
 ```./build.sh``` or ```bash build.sh``` or ```sh build.sh```
 
