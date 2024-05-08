@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2.2)
+cmake_minimum_required(VERSION 3.5)
 
 set(CMAKE_SYSTEM_NAME ANDROID)
 set(CMAKE_SYSTEM_VERSION 29)
