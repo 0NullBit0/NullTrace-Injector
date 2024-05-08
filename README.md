@@ -10,7 +10,7 @@ Or manually adjust the NDK and CMake_Toolchain paths here:
 [Link NDK](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L7)
 [Link CMAKE_TC](https://github.com/0NullBit0/NullTrace-Android-Inject/blob/main/CMakeLists.txt#L8)
 
-Install CMake and make sure the Path for CMake bin is set https://cmake.org/download/
+Install CMake and make sure the Path for CMake bin is set https://cmake.org/download/<br>
 Also make sure Ninja Path is set
 
 2: On Windows: run the build.bat file in powershell by: ```.\build.bat```
