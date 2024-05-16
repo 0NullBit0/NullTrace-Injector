@@ -1,74 +1,59 @@
 #include "pnull.h"
 
 
-bool NullTrace::ptraceWrite(pid_t pid, uintptr_t addr, const uint8_t* data, size_t len) {
-    long buffer = 0;
+bool NullTrace::ptraceWrite(pid_t pid, uintptr_t addr, uint8_t* data, size_t len) {
     size_t remain = len % NullTrace::WORDSIZE;
     size_t amount = len / NullTrace::WORDSIZE;
-
-    for(int i = 0; i < amount; i++, buffer = 0) {
-        for(int j = 0; j < NullTrace::WORDSIZE; j++)
-            buffer |= ((long) data[j + i * NullTrace::WORDSIZE]) << (NullTrace::BYTESIZE * (j + i * NullTrace::WORDSIZE));
-
-
+    for(size_t i = 0; i < amount; i++) {
+        long buffer;
+        std::memcpy(&buffer, data + i * WORDSIZE, NullTrace::WORDSIZE);
         if(ptrace(PTRACE_POKEDATA, pid, i * NullTrace::WORDSIZE + addr, buffer) == -1) {
             return false;
         }
     }
     if(remain > 0) {
+
         size_t leftToWord = NullTrace::WORDSIZE - remain;
         uint8_t oldAfterRemain[leftToWord];
         if(!NullTrace::ptraceRead(pid, amount * NullTrace::WORDSIZE + remain + addr, oldAfterRemain, leftToWord))
             return false;
 
-        buffer = 0;
+        long buffer = 0;
 
-        for(int i = 0; i < remain; i++)
-            buffer |= ((long)data[i + amount * NullTrace::WORDSIZE]) << (NullTrace::BYTESIZE * i);
-        for(int i = 0; i < leftToWord; i++)
-            buffer |= ((long)oldAfterRemain[i]) << (NullTrace::BYTESIZE * (remain + i));
-
-
+        std::memcpy(&buffer, data + amount * NullTrace::WORDSIZE, remain);
+        std::memcpy(reinterpret_cast<uint8_t*>(&buffer) + remain, oldAfterRemain, leftToWord);
         if(ptrace(PTRACE_POKEDATA, pid, amount * NullTrace::WORDSIZE + addr, buffer) == -1) {
             return false;
         }
     }
-
     return true;
 }
 
 bool NullTrace::ptraceRead(pid_t pid, uintptr_t addr, uint8_t* data, size_t len) {
-
-    long buffer = 0;
     size_t remain = len % NullTrace::WORDSIZE;
     size_t amount = len / NullTrace::WORDSIZE;
 
-    for(int i = 0; i < amount; i++, buffer = 0) {
+    for(size_t i = 0; i < amount; i++) {
+        long buffer = 0;
         errno = 0;
         buffer = ptrace(PTRACE_PEEKDATA, pid, i * NullTrace::WORDSIZE + addr, NULL);
         if(errno) {
             std::cerr << "[NullTrace] Encountered an error: " << strerror(errno) << "\n";
             return false;
         }
-        for(int j = 0; j < NullTrace::WORDSIZE; j++) {
-            data[j + NullTrace::WORDSIZE * i] = (buffer >> NullTrace::BYTESIZE * j) & 0xFF;
-        }
+        std::memcpy(data + i * NullTrace::WORDSIZE, &buffer, NullTrace::WORDSIZE);
     }
     if(remain > 0) {
         errno = 0;
-        buffer = ptrace(PTRACE_PEEKDATA, pid, amount * NullTrace::WORDSIZE + addr, NULL);
+        long buffer = ptrace(PTRACE_PEEKDATA, pid, amount * NullTrace::WORDSIZE + addr, NULL);
         if(errno) {
             std::cerr << "[NullTrace] Encountered an error: " << strerror(errno) << "\n";
             return false;
         }
-        for(int i = 0; i < remain; i++)  {
-            data[i + NullTrace::WORDSIZE * amount] = (buffer >> NullTrace::BYTESIZE * i) & 0xFF;
-        }
+        std::memcpy(data + amount * NullTrace::WORDSIZE, &buffer, remain);
     }
     return true;
 }
-
-
 
 
 uintptr_t NullTrace::ptraceRemoteCall(pid_t pid, uintptr_t addr, uintptr_t* argv, size_t argc, uintptr_t retAddr) {

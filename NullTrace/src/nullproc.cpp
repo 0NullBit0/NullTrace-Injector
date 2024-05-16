@@ -135,7 +135,7 @@ bool NullProcess::Process::injectLibrary(std::string path) {
     void* pathAddr = this->remoteString(path);
 
     if(pathAddr == nullptr) {
-        std::cerr << "[NullTrace] failed allocating memory for path aborting\n";
+        std::cerr << "[NullTrace] Failed making remote string for path aborting\n";
         return false;
     }
 
@@ -146,16 +146,20 @@ bool NullProcess::Process::injectLibrary(std::string path) {
     for(const NullProcess::Map& map : this->maps) {
 #if defined(__x86_64__) || defined(__i386__)
 
-        if(map.pathName.find("system/lib64/libart.so") != std::string::npos || map.pathName.find("system/lib/libart.so") != std::string::npos) {
+
+        if (map.pathName.find("system/lib64/libart.so") != std::string::npos ||
+            map.pathName.find("system/lib/libart.so") != std::string::npos) {
             libLR_base = map.start;
             std::cout << "libLR as : libart.so\n";
             break;
         }
-        if(map.pathName.find("system/lib64/libRS.so") != std::string::npos || map.pathName.find("system/lib/libRS.so") != std::string::npos) {
+        if (map.pathName.find("system/lib64/libRS.so") != std::string::npos ||
+            map.pathName.find("system/lib/libRS.so") != std::string::npos) {
             libLR_base = map.start;
             std::cout << "libLR as : libRS.so\n";
             break;
         }
+
 
 #elif defined(__arm__) || defined(__aarch64__)
         if(map.pathName.find("libart.so") != std::string::npos) {
@@ -176,10 +180,22 @@ bool NullProcess::Process::injectLibrary(std::string path) {
         for(const NullProcess::Map& map : this->maps) {
 
 #if defined(__x86_64__) || defined(__i386__)
-            if(map.pathName.find("system/lib64/libc.so") != std::string::npos || map.pathName.find("system/lib/libc.so") != std::string::npos) {
-                libLR_base = map.start;
-                std::cout << "libLR as : libc.so\n";
-                break;
+            if (NullUtils::getApiLevel() < 29) {
+                if (map.pathName.find("system/lib64/libc.so") != std::string::npos ||
+                    map.pathName.find("system/lib/libc.so") != std::string::npos) {
+                    libLR_base = map.start;
+                    std::cout << "libLR as : libc.so\n";
+                    break;
+                }
+            }
+            else {
+
+                if (map.pathName.find("/apex/com.android.runtime/lib64/bionic/libc.so") != std::string::npos ||
+                    map.pathName.find("/apex/com.android.runtime/lib/bionic/libc.so") != std::string::npos) {
+                    libLR_base = map.start;
+                    std::cout << "libLR as : libc.so\n";
+                    break;
+                }
             }
 #elif defined(__arm__) || defined(__aarch64__)
             if(map.pathName.find("libc.so") != std::string::npos) {
@@ -202,7 +218,7 @@ bool NullProcess::Process::injectLibrary(std::string path) {
         return true;
     }
     else {
-        void *handle = this->callR<void *>(libLR_base, this->libdl.remote_dlopen, pathAddr,
+        void* handle = this->callR<void *>(libLR_base, this->libdl.remote_dlopen, pathAddr,
                                            RTLD_NOW | RTLD_GLOBAL);
         if (!handle) {
             std::cerr << "[NullTrace] failed injection " << std::hex << handle << "\n";
@@ -248,7 +264,7 @@ bool NullProcess::Process::injectLibNB(void* pathAddr, uintptr_t libLR_base) {
     else {
         std::cout << "[NullTrace] using libnativebridge for nativebridge\n";
         if(NullUtils::getApiLevel() >= 26)
-            handle = this->callR<void*>(libLR_base, libnativebridge.remote_loadLibraryExt, pathAddr, RTLD_NOW | RTLD_GLOBAL, 3);
+            handle = this->callR<void*>(libLR_base, libnativebridge.remote_loadLibraryExt, pathAddr, RTLD_NOW | RTLD_GLOBAL, 0);
         else
             handle = this->callR<void*>(libLR_base, libnativebridge.remote_loadLibrary, pathAddr, RTLD_GLOBAL | RTLD_NOW);
     }
@@ -291,17 +307,21 @@ void* NullProcess::Process::remoteString(std::string str) {
     }
     std::cout << "[NullTrace] Allocated memory for string at Address: " << std::hex << strAddr << "\n";
 
-    uint8_t strData[strSize+1];
-    for(int i = 0; i < strSize; i++) {
-        strData[i] = str[i];
+    if(ptrace(PTRACE_ATTACH, this->pid, nullptr, nullptr) == -1) {
+        std::cerr << "[NullTrace] Failed attaching to process to write string\n";
+        return 0;
     }
-    strData[strSize] = '\0';
-
-    if(!this->writeProcessMemory(NullUtils::bytesToHex(strData, strSize+1),
-                                 reinterpret_cast<uintptr_t>(strAddr)) ) {
+    waitpid(this->pid, nullptr, WUNTRACED);
+    if(!NullTrace::ptraceWrite(this->pid, reinterpret_cast<uintptr_t>(strAddr),
+                               (uint8_t *) str.c_str(), strSize + 1)) {
         std::cerr << "[NullTrace] Failed writing string into target process aborting\n";
         this->call<void>(this->libc.remote_free, strAddr);
         return nullptr;
+    }
+
+    if(ptrace(PTRACE_DETACH, this->pid, nullptr, nullptr) == -1) {
+        std::cerr << "[NullTrace] Failed detaching from process while writing string\n";
+        return 0;
     }
 
     std::cout << "[NullTrace] Successfully written string into allocated memory\n";
@@ -317,7 +337,6 @@ bool NullProcess::Process::processExists(pid_t pid) {
             if(std::stoi(entry.path().filename()) == pid)
                 return true;
         } catch (const std::invalid_argument&) {
-            // Non-integer filename, skip to the next iteration
             continue;
         }
     }
@@ -385,12 +404,11 @@ void NullProcess::Process::locateSymbols() {
            && map.pathName.find("/nb/") == std::string::npos
            && NullUtils::endsWith(map.pathName, "libnativebridge.so")
            && !libnativebridgeinit) {
-            if(NullUtils::getApiLevel() >= 26)
-                this->libnativebridge.remote_loadLibraryExt = map.start + NullElf::getAddrSym(map.pathName.c_str(), "_ZN7android26NativeBridgeLoadLibraryExtEPKciPNS_25native_bridge_namespace_tE");
-            else
-                this->libnativebridge.remote_loadLibrary    = map.start + NullElf::getAddrSym(map.pathName.c_str(),"_ZN7android23NativeBridgeLoadLibraryEPKci");
-            this->libnativebridge.remote_getError = map.start + NullElf::getAddrSym(map.pathName.c_str(), "_ZN7android20NativeBridgeGetErrorEv");
-            this->libnativebridge.remote_getTrampoline = map.start + NullElf::getAddrSym(map.pathName.c_str(), "_ZN7android25NativeBridgeGetTrampolineEPvPKcS2_j");
+            std::cout << map.pathName << "\n";
+            this->libnativebridge.remote_loadLibraryExt = map.start + NullElf::getAddrSym(map.pathName.c_str(), "LoadLibraryExt", NullElf::CONTAINS);
+            this->libnativebridge.remote_loadLibrary    = map.start + NullElf::getAddrSym(map.pathName.c_str(),"LoadLibrary", NullElf::CONTAINS);
+            this->libnativebridge.remote_getError = map.start + NullElf::getAddrSym(map.pathName.c_str(), "GetError", NullElf::CONTAINS);
+            this->libnativebridge.remote_getTrampoline = map.start + NullElf::getAddrSym(map.pathName.c_str(), "GetTrampoline", NullElf::CONTAINS);
             this->nbInfo.nativeBridgeActive = true;
             this->nbInfo.usesCallbacksPtr   = false;
             libnativebridgeinit = true;

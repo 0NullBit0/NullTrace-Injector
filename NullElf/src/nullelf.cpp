@@ -1,7 +1,6 @@
 #include "nullelf.h"
 
-
-uintptr_t NullElf::getAddrSym(const char* path, const char* symbol) {
+uintptr_t NullElf::getAddrSym(const char* path, const char* symbol, SymbolResMode mode) {
     int fd = open(path, O_RDONLY);
     if(fd < 0) {
         std::cerr << "[NullElf] failed opening file\n";
@@ -32,7 +31,7 @@ uintptr_t NullElf::getAddrSym(const char* path, const char* symbol) {
     close(fd);
 
     if(e_ident[EI_CLASS] == ELFCLASS32) {
-        uintptr_t address = NullElfUtils::searchSymbolTable<Elf32_Ehdr, Elf32_Shdr, Elf32_Sym>(data, symbol);
+        uintptr_t address = NullElfUtils::searchSymbolTable<Elf32_Ehdr, Elf32_Shdr, Elf32_Sym>(data, symbol, mode);
 
         if(munmap(data, sb.st_size) == -1)
             std::cerr << "[NullElf] failed to unmap memory\n";
@@ -40,7 +39,7 @@ uintptr_t NullElf::getAddrSym(const char* path, const char* symbol) {
         return address;
     }
     else if(e_ident[EI_CLASS] == ELFCLASS64) {
-        uintptr_t address = NullElfUtils::searchSymbolTable<Elf64_Ehdr, Elf64_Shdr, Elf64_Sym>(data, symbol);
+        uintptr_t address = NullElfUtils::searchSymbolTable<Elf64_Ehdr, Elf64_Shdr, Elf64_Sym>(data, symbol, mode);
 
         if(munmap(data, sb.st_size) == -1)
             std::cerr << "[NullElf] failed to unmap memory\n";
@@ -116,10 +115,6 @@ int NullElf::getLibraryArch(const char* path) {
             std::cerr << "[NullElf] failed to unmap memory\n";
         return -1;
     }
-
-    if(munmap(data, sb.st_size) == -1)
-        std::cerr << "[NullElf] failed to unmap memory\n";
-    return -1;
 
 }
 

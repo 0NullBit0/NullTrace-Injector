@@ -14,12 +14,12 @@ std::vector<uint8_t> NullUtils::interpretHex(std::string hex) {
     if(hex.size() % 2 != 0) {
         return {};
     }
+
     for(char c : hex) {
         if(!std::isxdigit(c)) {
             return {};
         }
     }
-
     std::vector<uint8_t> bytes;
     for(int i = 0; i < hex.size(); i += 2) {
         std::string byteStr = hex.substr(i, 2);

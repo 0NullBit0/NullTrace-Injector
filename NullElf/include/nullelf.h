@@ -10,13 +10,10 @@
 #include <iostream>
 
 namespace NullElf {
-    constexpr int EAARCH64 = 0;
-    constexpr int EARM     = 1;
-    constexpr int EI386    = 2;
-    constexpr int EX86_64  = 3;
+    enum Architecture{EAARCH64, EARM, EI386, EX86_64};
+    enum SymbolResMode{DEFAULT, CONTAINS};
 
-
-    uintptr_t getAddrSym(const char* path, const char* symbol);
+    uintptr_t getAddrSym(const char* path, const char* symbol, SymbolResMode mode = DEFAULT);
 
     int getLibraryArch(const char* path);
 
@@ -50,7 +47,7 @@ namespace NullElfUtils {
     }
 
     template <typename Elf_Ehdr, typename Elf_Shdr, typename Elf_Sym>
-    uintptr_t searchSymbolTable(char* data, const char* symbol) {
+    uintptr_t searchSymbolTable(char* data, const char* symbol, NullElf::SymbolResMode mode) {
         Elf_Ehdr* ehdr = reinterpret_cast<Elf_Ehdr*>(data);
         Elf_Shdr* shdr = reinterpret_cast<Elf_Shdr*>(data + ehdr->e_shoff);
         Elf_Shdr* sh_strtable = &shdr[ehdr->e_shstrndx];
@@ -73,12 +70,21 @@ namespace NullElfUtils {
         Elf_Sym* symbols = reinterpret_cast<Elf_Sym*>(data + symtab_shdr->sh_offset);
         int symCount = symtab_shdr->sh_size / symtab_shdr->sh_entsize;
         for(int i = 0; i < symCount; i++) {
-            if(strcmp(symbol, strtable + symbols[i].st_name) == 0) {
-                return (uintptr_t) (symbols[i].st_value);
+            switch(mode) {
+                case NullElf::DEFAULT:
+                    if (std::strcmp(symbol, strtable + symbols[i].st_name) == 0) {
+                        return (uintptr_t) (symbols[i].st_value);
+                    }
+                    break;
+                case NullElf::CONTAINS:
+                    if (std::strstr(strtable + symbols[i].st_name, symbol) != nullptr) {
+                        return (uintptr_t) (symbols[i].st_value);
+                    }
+                    break;
             }
         }
 
-        std::cout << "[NullElf] " << symbol <<" not found\n";
+        std::cerr << "[NullElf] " << symbol <<" not found\n";
 
         return 0;
     }
