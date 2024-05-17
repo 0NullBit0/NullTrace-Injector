@@ -1,13 +1,13 @@
 #include "NullTrace/include/nullproc.h"
 #include "NullTrace/include/nullutils.h"
 
-bool handle_args(int argc, char* argv[], std::string &pkg, std::string &lib, bool &switchselinux);
+bool handle_args(int argc, char* argv[], std::string &pkg, std::string &lib);
 
 int main(int argc, char* argv[]) {
     std::string pkg;
     std::string lib;
-    bool switchselinux = true;
-    if(!handle_args(argc, argv, pkg, lib, switchselinux)) return -1;
+
+    if(!handle_args(argc, argv, pkg, lib)) return -1;
 
     NullProcess::Process proc;
 
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 }
 
 
-bool handle_args(int argc, char* argv[], std::string &pkg, std::string &lib, bool &switchselinux) {
+bool handle_args(int argc, char* argv[], std::string &pkg, std::string &lib) {
     bool hasPkg = false;
     bool hasLib = false;
 
