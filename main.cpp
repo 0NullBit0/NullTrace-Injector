@@ -35,6 +35,10 @@ int main(int argc, char* argv[]) {
 
     if(proc.injectLibrary(lib)) {
         std::cout << "Successfully injected library\n";
+        if(pkg == "zygote" || pkg == "zygote64") {
+            std::cout << "[INFO] INJECTED INTO ZYGOTE MAKE SURE YOU CHECK IF YOUR LIB IS IN THE RIGHT PROCESS\n";
+            std::cout << "[INFO] START OR RESTART YOUR GAME IF ITS ALREADY OPENED\n";
+        }
     }
     if(changed) {
         std::cout << "Resetting SELinux to old mode\n";
@@ -49,7 +53,7 @@ int main(int argc, char* argv[]) {
 bool handle_args(int argc, char* argv[], std::string &pkg, std::string &lib) {
     bool hasPkg = false;
     bool hasLib = false;
-
+    bool zygoteinjection = false;
     for(int i = 0; i < argc; i++) {
         std::string arg = argv[i];
 
@@ -73,9 +77,23 @@ bool handle_args(int argc, char* argv[], std::string &pkg, std::string &lib) {
                 return false;
             }
         }
+        else if(arg == "-zyi" || arg == "--zyi") {
+            if(i + 1 < argc) {
+                zygoteinjection = true;
+#if defined(__arm__) || defined(__i386__)
+                pkg = "zygote";
+#elif defined(__aarch64__) || defined(__x86_64__)
+                pkg = "zygote64";
+#endif
+            }
+        }
     }
-    if(!hasLib || !hasPkg) {
-        std::cerr << "-lib and -p options are required aborting.\n";
+    if(!hasLib || (!hasPkg && !zygoteinjection)) {
+        std::cerr << "-lib and -p or -zyi options are required aborting.\n";
+        return false;
+    }
+    if(zygoteinjection && hasPkg) {
+        std::cerr << "do not use -p and -zyi together aborting.\n";
         return false;
     }
 
